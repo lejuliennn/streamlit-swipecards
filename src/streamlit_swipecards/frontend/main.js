@@ -93,7 +93,8 @@ class SwipeCards {
     this.lastAction = null; // Store the last action without sending immediately
     this.agGridInstances = new Map(); // Store AG-Grid instances for cleanup
     this.isAnimating = false; // Prevent rapid repeated actions
-    
+    this.mode = 'swipe'; // Default mode
+
     this.init();
   }
   
@@ -109,7 +110,7 @@ class SwipeCards {
     
     // Clean up existing AG-Grid instances
     this.cleanupAgGrids();
-    
+
     if (this.currentIndex >= this.cards.length) {
       this.container.innerHTML = `
         <div class="no-more-cards">
@@ -126,7 +127,7 @@ class SwipeCards {
     }
     
     let cardsHTML = '';
-    
+
     // Show up to 5 cards in the stack for smoother animations
     for (let i = 0; i < Math.min(5, this.cards.length - this.currentIndex); i++) {
       const cardIndex = this.currentIndex + i;
@@ -159,7 +160,14 @@ class SwipeCards {
       `;
     }
     
+    this.container.classList.toggle('inspect-mode', this.mode === 'inspect');
+    this.container.classList.toggle('swipe-mode', this.mode === 'swipe');
+
     this.container.innerHTML = `
+      <div class="mode-toggle">
+        <button class="mode-btn ${this.mode === 'swipe' ? 'active' : ''}" data-mode="swipe">Swipe</button>
+        <button class="mode-btn ${this.mode === 'inspect' ? 'active' : ''}" data-mode="inspect">Inspect</button>
+      </div>
       <div class="cards-stack">
         ${cardsHTML}
       </div>
@@ -173,6 +181,32 @@ class SwipeCards {
         <div class="swipe-counter">Swiped: ${this.swipedCards.length} | Remaining: ${this.cards.length - this.currentIndex}</div>
       </div>
     `;
+
+    // Bind toggle buttons
+    const modeButtons = this.container.querySelectorAll('.mode-btn');
+    modeButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const newMode = e.currentTarget.getAttribute('data-mode');
+        this.setMode(newMode);
+      });
+    });
+  }
+
+  setMode(mode) {
+    this.mode = mode;
+    if (mode !== 'swipe') {
+      this.isDragging = false;
+    }
+    this.container.classList.toggle('inspect-mode', mode === 'inspect');
+    this.container.classList.toggle('swipe-mode', mode === 'swipe');
+    const modeButtons = this.container.querySelectorAll('.mode-btn');
+    modeButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+    });
+    const actionBtns = this.container.querySelectorAll('.action-btn');
+    actionBtns.forEach(btn => {
+      btn.disabled = mode !== 'swipe';
+    });
   }
   
   cleanupAgGrids() {
@@ -718,26 +752,27 @@ class SwipeCards {
   }
   
   handleStart(e) {
+    if (this.mode !== 'swipe') return;
     this.isDragging = true;
     const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
     const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
-    
+
     this.startX = clientX;
     this.startY = clientY;
     this.currentX = clientX;
     this.currentY = clientY;
-    
+
     const topCard = this.container.querySelector('.swipe-card:first-child');
     if (topCard) {
       topCard.classList.add('dragging');
     }
-    
+
     e.preventDefault();
   }
-  
+
   handleMove(e) {
-    if (!this.isDragging) return;
-    
+    if (!this.isDragging || this.mode !== 'swipe') return;
+
     const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
     const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
     
@@ -770,10 +805,10 @@ class SwipeCards {
     
     e.preventDefault();
   }
-  
+
   handleEnd(e) {
-    if (!this.isDragging) return;
-    
+    if (!this.isDragging || this.mode !== 'swipe') return;
+
     this.isDragging = false;
     const deltaX = this.currentX - this.startX;
     const topCard = this.container.querySelector('.swipe-card:first-child');

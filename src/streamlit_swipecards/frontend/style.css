@@ -208,6 +208,31 @@ body {
   opacity: 0.8;
 }
 
+/* Mode toggle styles */
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.mode-btn {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.mode-btn.active {
+  background: var(--button-gradient);
+  color: #fff;
+  border: none;
+}
+
 .action-btn {
   width: 60px;
   height: 60px;
@@ -222,6 +247,24 @@ body {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   color: white;
   box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+/* Disable interactions when in inspect mode */
+.swipe-container.inspect-mode .swipe-card {
+  cursor: default;
+}
+
+.swipe-container.inspect-mode .action-btn {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.swipe-container.swipe-mode .ag-grid-container {
+  pointer-events: none;
+}
+
+.swipe-container.inspect-mode .ag-grid-container {
+  pointer-events: auto;
 }
 
 .action-btn:hover {
